@@ -68,14 +68,14 @@ class FormbricksAPI:
 		Args:
 			url: Webhook URL to call
 			triggers: List of triggers (e.g., ["responseCreated", "responseFinished"])
-			survey_ids: Optional list of survey IDs to limit webhook to specific surveys
+			survey_ids: Optional list of survey IDs to limit webhook to specific surveys.
+			           If empty or None, webhook listens to all surveys.
 		"""
 		data = {
 			"url": url,
 			"triggers": triggers,
+			"surveyIds": survey_ids if survey_ids else [],  # Required field, empty = all surveys
 		}
-		if survey_ids:
-			data["surveyIds"] = survey_ids
 		return self._make_request("POST", "webhooks", data=data)
 
 	def get_webhooks(self):
