@@ -161,10 +161,9 @@ def _handle_message_created(data):
 	"""Handle message_created event.
 
 	Creates a new message in the corresponding conversation.
-	Can also trigger lead creation based on settings.
+	Also adds message as comment to linked Issue.
 	"""
 	from erpnext_chatwoot_formbricks.chatwoot.conversation import add_message_to_conversation
-	from erpnext_chatwoot_formbricks.common.lead_creation import maybe_create_lead_from_conversation
 
 	message = data.get("content") or data.get("message", {}).get("content", "")
 	conversation = data.get("conversation", {})
@@ -182,10 +181,8 @@ def _handle_message_created(data):
 			created_at=data.get("created_at"),
 		)
 
-		# Check if we should create a lead
-		settings = frappe.get_single("Chatwoot Settings")
-		if settings.auto_create_lead:
-			maybe_create_lead_from_conversation(conversation, sender)
+		# Add message as comment to linked Issue
+		_add_message_to_issue(conversation.get("id"), message, sender, data.get("message_type", "incoming"))
 
 
 def _handle_contact_created(data):
@@ -272,4 +269,52 @@ def _create_issue_from_conversation(conv_doc, conversation_data, contact_data, s
 		frappe.log_error(
 			f"Error creating Issue from conversation {conversation_id}: {e}",
 			"Chatwoot Issue Creation Error"
+		)
+
+
+def _add_message_to_issue(conversation_id, message, sender, message_type):
+	"""Add a Chatwoot message as a comment to the linked Issue.
+
+	Args:
+		conversation_id: Chatwoot conversation ID
+		message: Message content
+		sender: Sender data from webhook
+		message_type: Type of message (incoming/outgoing)
+	"""
+	if not conversation_id:
+		return
+
+	conversation_id = str(conversation_id)
+
+	# Find the Issue linked to this conversation
+	issue_name = frappe.db.get_value("Issue", {"chatwoot_conversation_id": conversation_id}, "name")
+	if not issue_name:
+		return
+
+	try:
+		sender_name = sender.get("name", "Unknown")
+		sender_type = sender.get("type", "contact")
+
+		# Format the comment based on sender type
+		if sender_type in ("agent", "agent_bot", "bot"):
+			icon = "🤖" if sender_type in ("agent_bot", "bot") else "👤"
+			comment_content = f"<p><strong>{icon} {sender_name}:</strong></p><p>{message}</p>"
+		else:
+			comment_content = f"<p><strong>💬 {sender_name}:</strong></p><p>{message}</p>"
+
+		# Add as comment to the Issue
+		comment = frappe.get_doc({
+			"doctype": "Comment",
+			"comment_type": "Comment",
+			"reference_doctype": "Issue",
+			"reference_name": issue_name,
+			"content": comment_content,
+		})
+		comment.insert(ignore_permissions=True)
+		frappe.db.commit()
+
+	except Exception as e:
+		frappe.log_error(
+			f"Error adding message to Issue {issue_name}: {e}",
+			"Chatwoot Issue Comment Error"
 		)

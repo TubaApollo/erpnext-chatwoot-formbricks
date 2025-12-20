@@ -37,6 +37,9 @@ doc_events = {
 		"after_insert": "erpnext_chatwoot_formbricks.common.contact_sync.sync_lead_to_chatwoot",
 		"on_update": "erpnext_chatwoot_formbricks.common.contact_sync.sync_lead_to_chatwoot",
 	},
+	"Comment": {
+		"after_insert": "erpnext_chatwoot_formbricks.chatwoot.issue_sync.send_comment_to_chatwoot",
+	},
 }
 
 # Scheduled Tasks
