@@ -8,14 +8,20 @@ from frappe import _
 class ChatwootAPI:
 	"""API client for Chatwoot."""
 
-	def __init__(self, settings=None):
-		"""Initialize with settings."""
+	def __init__(self, settings=None, api_token=None):
+		"""Initialize with settings.
+
+		Args:
+			settings: Chatwoot Settings document (optional, will fetch if not provided)
+			api_token: Override API token (optional, for per-user tokens)
+		"""
 		if settings is None:
 			settings = frappe.get_single("Chatwoot Settings")
 
 		self.api_url = settings.api_url.rstrip("/")
 		self.account_id = settings.account_id
-		self.api_token = settings.get_password("api_access_token")
+		# Use provided token or fall back to global settings
+		self.api_token = api_token or settings.get_password("api_access_token")
 		self.timeout = 30
 
 	def _get_headers(self):

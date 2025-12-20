@@ -41,7 +41,14 @@ def send_comment_to_chatwoot(doc, method=None):
 	try:
 		from erpnext_chatwoot_formbricks.chatwoot.api import ChatwootAPI
 
-		api = ChatwootAPI(settings)
+		# Get user-specific Chatwoot API token (if configured)
+		user_token = None
+		user_doc = frappe.get_doc("User", doc.owner)
+		if hasattr(user_doc, "chatwoot_api_token") and user_doc.chatwoot_api_token:
+			user_token = user_doc.get_password("chatwoot_api_token")
+
+		# Use user token if available, otherwise global token
+		api = ChatwootAPI(settings, api_token=user_token)
 
 		# Extract text from HTML comment
 		content = _extract_text_from_html(doc.content)

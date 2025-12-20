@@ -82,6 +82,22 @@ def setup_custom_fields():
 				translatable=0,
 			),
 		],
+		"User": [
+			dict(
+				fieldname="chatwoot_section",
+				label="Chatwoot Integration",
+				fieldtype="Section Break",
+				insert_after="simultaneous_sessions",
+				collapsible=1,
+			),
+			dict(
+				fieldname="chatwoot_api_token",
+				label="Chatwoot API Token",
+				fieldtype="Password",
+				insert_after="chatwoot_section",
+				description="Personal Chatwoot API token. Messages will appear under your Chatwoot agent name. Leave empty to use global token.",
+			),
+		],
 	}
 
 	create_custom_fields(custom_fields)
