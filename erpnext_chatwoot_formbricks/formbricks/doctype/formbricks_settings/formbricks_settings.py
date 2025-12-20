@@ -38,6 +38,18 @@ class FormbricksSettings(Document):
 			api = FormbricksAPI(self)
 			webhook_url = self._get_webhook_url()
 
+			# Check if webhook already exists
+			try:
+				existing = api.get_webhooks()
+				webhooks = existing.get("data", [])
+				for wh in webhooks:
+					if wh.get("url") == webhook_url:
+						self.sync_status = "Webhook already registered"
+						frappe.db.set_value("Formbricks Settings", None, "sync_status", "Webhook already registered")
+						return
+			except Exception:
+				pass  # Continue to try registering
+
 			result = api.register_webhook(
 				url=webhook_url,
 				triggers=["responseCreated", "responseUpdated", "responseFinished"]
@@ -47,7 +59,12 @@ class FormbricksSettings(Document):
 				self.sync_status = "Webhook registered successfully"
 				frappe.db.set_value("Formbricks Settings", None, "sync_status", "Webhook registered successfully")
 		except Exception as e:
-			self.sync_status = f"Webhook registration failed: {str(e)}"
+			error_msg = str(e)
+			if "400" in error_msg:
+				# Likely duplicate webhook
+				self.sync_status = "Webhook may already exist - check Formbricks manually"
+			else:
+				self.sync_status = f"Webhook registration failed: {error_msg}"
 			frappe.log_error(f"Formbricks webhook registration failed: {e}")
 
 	def _get_webhook_url(self):

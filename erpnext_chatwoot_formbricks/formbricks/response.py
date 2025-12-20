@@ -103,32 +103,63 @@ def _extract_contact_info(doc, data):
 	Args:
 		doc: Formbricks Response document
 		data: Response data dictionary
+
+	Handles both simple string fields and Formbricks array format:
+	e.g., "contactinfo01ab": ["firstname", "lastname", "email@mail.com", "phone", "company"]
 	"""
 	# Common field names for contact information
 	email_fields = ["email", "e-mail", "emailAddress", "email_address", "contact_email"]
 	name_fields = ["name", "fullName", "full_name", "firstName", "first_name", "contact_name"]
 	phone_fields = ["phone", "phoneNumber", "phone_number", "mobile", "telephone", "contact_phone"]
 
-	# Extract email
-	for field in email_fields:
-		value = data.get(field)
-		if value and isinstance(value, str) and "@" in value:
-			doc.contact_email = value
-			break
+	# First, check for Formbricks contact info array fields
+	# These typically have names like "contactinfo01ab" and contain [firstname, lastname, email, phone, company]
+	for field_name, value in data.items():
+		if isinstance(value, list) and len(value) >= 3:
+			# Check if this looks like a contact info array
+			if "contact" in field_name.lower() or "info" in field_name.lower():
+				# Typical format: [firstname, lastname, email, phone, company]
+				if len(value) >= 1 and value[0]:
+					firstname = str(value[0]).strip()
+					lastname = str(value[1]).strip() if len(value) > 1 and value[1] else ""
+					if firstname or lastname:
+						doc.contact_name = f"{firstname} {lastname}".strip()
+				if len(value) >= 3 and value[2] and "@" in str(value[2]):
+					doc.contact_email = str(value[2]).strip()
+				if len(value) >= 4 and value[3]:
+					doc.contact_phone = str(value[3]).strip()
+				break  # Found contact info array, stop looking
 
-	# Extract name
-	for field in name_fields:
-		value = data.get(field)
-		if value and isinstance(value, str):
-			doc.contact_name = value
-			break
+	# If not found in array, try simple string fields
+	if not doc.contact_email:
+		for field in email_fields:
+			value = data.get(field)
+			if value and isinstance(value, str) and "@" in value:
+				doc.contact_email = value
+				break
 
-	# Extract phone
-	for field in phone_fields:
-		value = data.get(field)
-		if value and isinstance(value, str):
-			doc.contact_phone = value
-			break
+	# Also search all values for email if still not found
+	if not doc.contact_email:
+		for value in data.values():
+			if isinstance(value, str) and "@" in value and "." in value.split("@")[-1]:
+				doc.contact_email = value
+				break
+
+	# Extract name if not already set
+	if not doc.contact_name:
+		for field in name_fields:
+			value = data.get(field)
+			if value and isinstance(value, str):
+				doc.contact_name = value
+				break
+
+	# Extract phone if not already set
+	if not doc.contact_phone:
+		for field in phone_fields:
+			value = data.get(field)
+			if value and isinstance(value, str):
+				doc.contact_phone = value
+				break
 
 
 def _link_to_erpnext_contact(doc):
@@ -191,10 +222,15 @@ def _maybe_create_lead(doc, settings):
 		if doc.contact_phone:
 			lead.mobile_no = doc.contact_phone
 
-		if settings.lead_source:
+		# Set lead source
+		if settings.lead_source and frappe.db.exists("Lead Source", settings.lead_source):
 			lead.source = settings.lead_source
 		else:
-			lead.source = "Survey"
+			# Try common fallback sources
+			for source in ["Campaign", "Advertisement", "Website"]:
+				if frappe.db.exists("Lead Source", source):
+					lead.source = source
+					break
 
 		lead.formbricks_contact_id = ""
 		lead.formbricks_response_id = doc.response_id
