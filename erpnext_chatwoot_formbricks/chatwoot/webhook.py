@@ -108,8 +108,16 @@ def _handle_conversation_created(data):
 	"""
 	from erpnext_chatwoot_formbricks.chatwoot.conversation import create_or_update_conversation
 
-	conversation = data.get("conversation", {})
-	contact = data.get("sender", {}) or conversation.get("meta", {}).get("sender", {})
+	# conversation_created sends data directly or under "conversation" key
+	conversation = data.get("conversation") or data
+
+	# Get contact/sender info from various possible locations
+	contact = (
+		data.get("sender") or
+		data.get("meta", {}).get("sender") or
+		conversation.get("meta", {}).get("sender") or
+		{}
+	)
 
 	conv_doc = create_or_update_conversation(conversation, contact)
 
@@ -123,8 +131,16 @@ def _handle_conversation_updated(data):
 	"""Handle conversation_updated event."""
 	from erpnext_chatwoot_formbricks.chatwoot.conversation import create_or_update_conversation
 
-	conversation = data.get("conversation", {})
-	contact = data.get("sender", {}) or conversation.get("meta", {}).get("sender", {})
+	# Event may send data directly or under "conversation" key
+	conversation = data.get("conversation") or data
+
+	# Get contact/sender info from various possible locations
+	contact = (
+		data.get("sender") or
+		data.get("meta", {}).get("sender") or
+		conversation.get("meta", {}).get("sender") or
+		{}
+	)
 
 	create_or_update_conversation(conversation, contact)
 
