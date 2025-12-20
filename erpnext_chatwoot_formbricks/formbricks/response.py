@@ -199,12 +199,37 @@ def _parse_timestamp(timestamp):
 	"""Parse timestamp from Formbricks format.
 
 	Args:
-		timestamp: Timestamp string or ISO format
+		timestamp: Timestamp string or ISO format (e.g., '2025-12-20T23:27:30.601Z')
 	"""
 	if not timestamp:
 		return None
 
 	try:
-		return get_datetime(timestamp)
+		timestamp_str = str(timestamp)
+
+		# Remove timezone info (MariaDB doesn't support it)
+		# Handle ISO format with Z suffix
+		if timestamp_str.endswith('Z'):
+			timestamp_str = timestamp_str[:-1]
+		# Handle +00:00 style timezone
+		elif '+' in timestamp_str:
+			timestamp_str = timestamp_str.rsplit('+', 1)[0]
+		elif timestamp_str.count('-') > 2:
+			# Handle -00:00 style timezone at the end
+			parts = timestamp_str.rsplit('-', 1)
+			if ':' in parts[-1] and len(parts[-1]) <= 6:
+				timestamp_str = parts[0]
+
+		# Replace T with space for standard datetime format
+		timestamp_str = timestamp_str.replace('T', ' ')
+
+		# Truncate microseconds if too long (max 6 digits)
+		if '.' in timestamp_str:
+			parts = timestamp_str.split('.')
+			if len(parts[1]) > 6:
+				parts[1] = parts[1][:6]
+			timestamp_str = '.'.join(parts)
+
+		return get_datetime(timestamp_str)
 	except Exception:
 		return now_datetime()
