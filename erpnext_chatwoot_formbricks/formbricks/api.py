@@ -62,21 +62,29 @@ class FormbricksAPI:
 	# Webhook Management
 	# ==========================================================================
 
-	def register_webhook(self, url, triggers):
-		"""Register a webhook with Formbricks."""
+	def register_webhook(self, url, triggers, survey_ids=None):
+		"""Register a webhook with Formbricks.
+
+		Args:
+			url: Webhook URL to call
+			triggers: List of triggers (e.g., ["responseCreated", "responseFinished"])
+			survey_ids: Optional list of survey IDs to limit webhook to specific surveys
+		"""
 		data = {
 			"url": url,
 			"triggers": triggers,
 		}
-		return self._make_request("POST", "management/webhooks", data=data)
+		if survey_ids:
+			data["surveyIds"] = survey_ids
+		return self._make_request("POST", "webhooks", data=data)
 
 	def get_webhooks(self):
 		"""Get list of registered webhooks."""
-		return self._make_request("GET", "management/webhooks")
+		return self._make_request("GET", "webhooks")
 
 	def delete_webhook(self, webhook_id):
 		"""Delete a webhook."""
-		return self._make_request("DELETE", f"management/webhooks/{webhook_id}")
+		return self._make_request("DELETE", f"webhooks/{webhook_id}")
 
 	# ==========================================================================
 	# Survey Management
