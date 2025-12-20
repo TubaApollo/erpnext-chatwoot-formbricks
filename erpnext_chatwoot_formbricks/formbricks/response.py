@@ -18,11 +18,12 @@ def create_or_update_response(response_data):
 
 	response_id = str(response_id)
 
-	# Check if response exists
-	existing = frappe.db.exists("Formbricks Response", {"response_id": response_id})
+	# Document name follows autoname format: FBRESP-{response_id}
+	doc_name = f"FBRESP-{response_id}"
 
-	if existing:
-		doc = frappe.get_doc("Formbricks Response", existing)
+	# Check if response exists by name (more reliable than field lookup)
+	if frappe.db.exists("Formbricks Response", doc_name):
+		doc = frappe.get_doc("Formbricks Response", doc_name)
 	else:
 		doc = frappe.new_doc("Formbricks Response")
 		doc.response_id = response_id
@@ -53,8 +54,22 @@ def create_or_update_response(response_data):
 	# Link to existing Customer or Lead if possible
 	_link_to_erpnext_contact(doc)
 
-	doc.save(ignore_permissions=True)
-	frappe.db.commit()
+	try:
+		doc.save(ignore_permissions=True)
+		frappe.db.commit()
+	except frappe.DuplicateEntryError:
+		# Race condition: document was created by another webhook event
+		# Fetch and update the existing document
+		frappe.db.rollback()
+		doc_name = f"FBRESP-{response_id}"
+		doc = frappe.get_doc("Formbricks Response", doc_name)
+		# Update with new data
+		if response_data.get("finished"):
+			doc.finished = True
+		if response_data.get("finishedAt"):
+			doc.finished_at = _parse_timestamp(response_data.get("finishedAt"))
+		doc.save(ignore_permissions=True)
+		frappe.db.commit()
 
 	return doc
 
