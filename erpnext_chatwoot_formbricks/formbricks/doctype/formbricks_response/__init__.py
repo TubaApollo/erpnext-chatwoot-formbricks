@@ -1,0 +1,1 @@
+"""Formbricks Response DocType."""

@@ -1,0 +1,179 @@
+{
+	"actions": [],
+	"autoname": "format:CWCONV-{conversation_id}",
+	"creation": "2024-12-20 00:00:00.000000",
+	"doctype": "DocType",
+	"editable_grid": 1,
+	"engine": "InnoDB",
+	"field_order": [
+		"conversation_id",
+		"status",
+		"inbox_id",
+		"inbox_name",
+		"column_break_1",
+		"customer",
+		"lead",
+		"contact_name",
+		"contact_email",
+		"section_break_messages",
+		"messages",
+		"section_break_meta",
+		"created_at",
+		"updated_at",
+		"column_break_meta",
+		"first_reply_created_at",
+		"waiting_since"
+	],
+	"fields": [
+		{
+			"fieldname": "conversation_id",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Chatwoot Conversation ID",
+			"read_only": 1,
+			"reqd": 1,
+			"unique": 1
+		},
+		{
+			"fieldname": "status",
+			"fieldtype": "Select",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Status",
+			"options": "open\nresolved\npending\nsnoozed"
+		},
+		{
+			"fieldname": "inbox_id",
+			"fieldtype": "Data",
+			"label": "Inbox ID",
+			"read_only": 1
+		},
+		{
+			"fieldname": "inbox_name",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "Inbox Name",
+			"read_only": 1
+		},
+		{
+			"fieldname": "column_break_1",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "customer",
+			"fieldtype": "Link",
+			"in_list_view": 1,
+			"label": "Customer",
+			"options": "Customer"
+		},
+		{
+			"fieldname": "lead",
+			"fieldtype": "Link",
+			"label": "Lead",
+			"options": "Lead"
+		},
+		{
+			"fieldname": "contact_name",
+			"fieldtype": "Data",
+			"label": "Contact Name",
+			"read_only": 1
+		},
+		{
+			"fieldname": "contact_email",
+			"fieldtype": "Data",
+			"label": "Contact Email",
+			"read_only": 1
+		},
+		{
+			"fieldname": "section_break_messages",
+			"fieldtype": "Section Break",
+			"label": "Messages"
+		},
+		{
+			"fieldname": "messages",
+			"fieldtype": "Table",
+			"label": "Messages",
+			"options": "Chatwoot Message"
+		},
+		{
+			"fieldname": "section_break_meta",
+			"fieldtype": "Section Break",
+			"label": "Metadata"
+		},
+		{
+			"fieldname": "created_at",
+			"fieldtype": "Datetime",
+			"label": "Created At",
+			"read_only": 1
+		},
+		{
+			"fieldname": "updated_at",
+			"fieldtype": "Datetime",
+			"label": "Updated At",
+			"read_only": 1
+		},
+		{
+			"fieldname": "column_break_meta",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "first_reply_created_at",
+			"fieldtype": "Datetime",
+			"label": "First Reply At",
+			"read_only": 1
+		},
+		{
+			"fieldname": "waiting_since",
+			"fieldtype": "Datetime",
+			"label": "Waiting Since",
+			"read_only": 1
+		}
+	],
+	"index_web_pages_for_search": 1,
+	"links": [
+		{
+			"link_doctype": "Customer",
+			"link_fieldname": "customer"
+		},
+		{
+			"link_doctype": "Lead",
+			"link_fieldname": "lead"
+		}
+	],
+	"modified": "2024-12-20 00:00:00.000000",
+	"modified_by": "Administrator",
+	"module": "chatwoot",
+	"name": "Chatwoot Conversation",
+	"naming_rule": "Expression",
+	"owner": "Administrator",
+	"permissions": [
+		{
+			"create": 1,
+			"delete": 1,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "System Manager",
+			"share": 1,
+			"write": 1
+		},
+		{
+			"create": 1,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "Sales User",
+			"share": 1,
+			"write": 1
+		}
+	],
+	"sort_field": "modified",
+	"sort_order": "DESC",
+	"states": [],
+	"track_changes": 1
+}

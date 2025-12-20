@@ -1,0 +1,57 @@
+[project]
+name = "erpnext_chatwoot_formbricks"
+description = "Frappe/ERPNext v15 plugin for bidirectional integration with Chatwoot and Formbricks"
+authors = [
+    { name = "Your Name", email = "your@email.com" }
+]
+requires-python = ">=3.10"
+readme = "./README.md"
+dynamic = ["version"]
+
+dependencies = [
+    "requests>=2.28.0",
+]
+
+[project.license]
+file = "./LICENSE"
+
+[build-system]
+requires = ["flit_core >=3.4,<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    "F",
+    "E",
+    "W",
+    "I",
+    "UP",
+    "B",
+    "RUF",
+]
+ignore = [
+    "B017",
+    "B018",
+    "B023",
+    "B904",
+    "E101",
+    "E402",
+    "E501",
+    "E741",
+    "F401",
+    "F403",
+    "F405",
+    "F722",
+    "W191",
+    "RUF001",
+]
+typing-modules = ["frappe.types.DF"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "tab"
+docstring-code-format = true

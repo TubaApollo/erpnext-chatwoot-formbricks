@@ -1,0 +1,1 @@
+"""Formbricks integration module."""

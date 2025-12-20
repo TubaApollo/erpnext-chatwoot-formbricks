@@ -1,0 +1,200 @@
+{
+	"actions": [],
+	"creation": "2024-12-20 00:00:00.000000",
+	"doctype": "DocType",
+	"editable_grid": 1,
+	"engine": "InnoDB",
+	"field_order": [
+		"enabled",
+		"column_break_1",
+		"section_break_api",
+		"api_url",
+		"account_id",
+		"column_break_api",
+		"api_access_token",
+		"webhook_secret",
+		"section_break_sync",
+		"auto_create_customer",
+		"auto_create_lead",
+		"column_break_sync",
+		"default_inbox_id",
+		"customer_group",
+		"section_break_conversation",
+		"sync_conversations_as_issues",
+		"issue_type",
+		"column_break_conversation",
+		"conversation_retention_days",
+		"section_break_status",
+		"last_sync",
+		"webhook_registered",
+		"column_break_status",
+		"sync_status"
+	],
+	"fields": [
+		{
+			"default": "0",
+			"fieldname": "enabled",
+			"fieldtype": "Check",
+			"label": "Enable Chatwoot Integration"
+		},
+		{
+			"fieldname": "column_break_1",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "section_break_api",
+			"fieldtype": "Section Break",
+			"label": "API Configuration"
+		},
+		{
+			"description": "Your Chatwoot server URL (e.g., https://chatwoot.example.com)",
+			"fieldname": "api_url",
+			"fieldtype": "Data",
+			"label": "Chatwoot API URL",
+			"mandatory_depends_on": "eval:doc.enabled"
+		},
+		{
+			"description": "Your Chatwoot Account ID",
+			"fieldname": "account_id",
+			"fieldtype": "Data",
+			"label": "Account ID",
+			"mandatory_depends_on": "eval:doc.enabled"
+		},
+		{
+			"fieldname": "column_break_api",
+			"fieldtype": "Column Break"
+		},
+		{
+			"description": "API Access Token from Chatwoot Settings",
+			"fieldname": "api_access_token",
+			"fieldtype": "Password",
+			"label": "API Access Token",
+			"mandatory_depends_on": "eval:doc.enabled"
+		},
+		{
+			"description": "Secret for verifying webhook signatures",
+			"fieldname": "webhook_secret",
+			"fieldtype": "Password",
+			"label": "Webhook Secret"
+		},
+		{
+			"fieldname": "section_break_sync",
+			"fieldtype": "Section Break",
+			"label": "Sync Settings"
+		},
+		{
+			"default": "1",
+			"description": "Automatically create ERPNext Customer when a new Chatwoot contact is created",
+			"fieldname": "auto_create_customer",
+			"fieldtype": "Check",
+			"label": "Auto Create Customer"
+		},
+		{
+			"default": "0",
+			"description": "Create Lead instead of Customer for new contacts",
+			"fieldname": "auto_create_lead",
+			"fieldtype": "Check",
+			"label": "Auto Create Lead"
+		},
+		{
+			"fieldname": "column_break_sync",
+			"fieldtype": "Column Break"
+		},
+		{
+			"description": "Default Chatwoot Inbox ID for sending messages",
+			"fieldname": "default_inbox_id",
+			"fieldtype": "Data",
+			"label": "Default Inbox ID"
+		},
+		{
+			"description": "Default Customer Group for new customers",
+			"fieldname": "customer_group",
+			"fieldtype": "Link",
+			"label": "Customer Group",
+			"options": "Customer Group"
+		},
+		{
+			"fieldname": "section_break_conversation",
+			"fieldtype": "Section Break",
+			"label": "Conversation Settings"
+		},
+		{
+			"default": "0",
+			"description": "Create ERPNext Issues from Chatwoot conversations",
+			"fieldname": "sync_conversations_as_issues",
+			"fieldtype": "Check",
+			"label": "Sync Conversations as Issues"
+		},
+		{
+			"depends_on": "eval:doc.sync_conversations_as_issues",
+			"description": "Issue Type for synced conversations",
+			"fieldname": "issue_type",
+			"fieldtype": "Link",
+			"label": "Issue Type",
+			"options": "Issue Type"
+		},
+		{
+			"fieldname": "column_break_conversation",
+			"fieldtype": "Column Break"
+		},
+		{
+			"default": "90",
+			"description": "Days to keep conversation records (0 = forever)",
+			"fieldname": "conversation_retention_days",
+			"fieldtype": "Int",
+			"label": "Conversation Retention Days"
+		},
+		{
+			"fieldname": "section_break_status",
+			"fieldtype": "Section Break",
+			"label": "Status"
+		},
+		{
+			"fieldname": "last_sync",
+			"fieldtype": "Datetime",
+			"label": "Last Sync",
+			"read_only": 1
+		},
+		{
+			"default": "0",
+			"fieldname": "webhook_registered",
+			"fieldtype": "Check",
+			"label": "Webhook Registered",
+			"read_only": 1
+		},
+		{
+			"fieldname": "column_break_status",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "sync_status",
+			"fieldtype": "Data",
+			"label": "Sync Status",
+			"read_only": 1
+		}
+	],
+	"index_web_pages_for_search": 1,
+	"issingle": 1,
+	"links": [],
+	"modified": "2024-12-20 00:00:00.000000",
+	"modified_by": "Administrator",
+	"module": "chatwoot",
+	"name": "Chatwoot Settings",
+	"owner": "Administrator",
+	"permissions": [
+		{
+			"create": 1,
+			"delete": 1,
+			"email": 1,
+			"print": 1,
+			"read": 1,
+			"role": "System Manager",
+			"share": 1,
+			"write": 1
+		}
+	],
+	"sort_field": "modified",
+	"sort_order": "DESC",
+	"states": [],
+	"track_changes": 1
+}

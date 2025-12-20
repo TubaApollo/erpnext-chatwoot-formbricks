@@ -1,0 +1,177 @@
+{
+	"actions": [],
+	"creation": "2024-12-20 00:00:00.000000",
+	"doctype": "DocType",
+	"editable_grid": 1,
+	"engine": "InnoDB",
+	"field_order": [
+		"enabled",
+		"column_break_1",
+		"section_break_api",
+		"api_url",
+		"environment_id",
+		"column_break_api",
+		"api_key",
+		"webhook_secret",
+		"section_break_sync",
+		"auto_create_lead",
+		"lead_source",
+		"column_break_sync",
+		"lead_survey_ids",
+		"section_break_surveys",
+		"sync_surveys",
+		"column_break_surveys",
+		"survey_sync_interval",
+		"section_break_status",
+		"last_sync",
+		"column_break_status",
+		"sync_status"
+	],
+	"fields": [
+		{
+			"default": "0",
+			"fieldname": "enabled",
+			"fieldtype": "Check",
+			"label": "Enable Formbricks Integration"
+		},
+		{
+			"fieldname": "column_break_1",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "section_break_api",
+			"fieldtype": "Section Break",
+			"label": "API Configuration"
+		},
+		{
+			"description": "Your Formbricks server URL (e.g., https://formbricks.example.com)",
+			"fieldname": "api_url",
+			"fieldtype": "Data",
+			"label": "Formbricks API URL",
+			"mandatory_depends_on": "eval:doc.enabled"
+		},
+		{
+			"description": "Environment ID from Formbricks",
+			"fieldname": "environment_id",
+			"fieldtype": "Data",
+			"label": "Environment ID",
+			"mandatory_depends_on": "eval:doc.enabled"
+		},
+		{
+			"fieldname": "column_break_api",
+			"fieldtype": "Column Break"
+		},
+		{
+			"description": "Management API Key from Formbricks Settings",
+			"fieldname": "api_key",
+			"fieldtype": "Password",
+			"label": "API Key",
+			"mandatory_depends_on": "eval:doc.enabled"
+		},
+		{
+			"description": "Secret for verifying webhook signatures",
+			"fieldname": "webhook_secret",
+			"fieldtype": "Password",
+			"label": "Webhook Secret"
+		},
+		{
+			"fieldname": "section_break_sync",
+			"fieldtype": "Section Break",
+			"label": "Lead Creation Settings"
+		},
+		{
+			"default": "0",
+			"description": "Automatically create Leads from survey responses",
+			"fieldname": "auto_create_lead",
+			"fieldtype": "Check",
+			"label": "Auto Create Lead"
+		},
+		{
+			"depends_on": "eval:doc.auto_create_lead",
+			"description": "Lead Source for created leads",
+			"fieldname": "lead_source",
+			"fieldtype": "Link",
+			"label": "Lead Source",
+			"options": "Lead Source"
+		},
+		{
+			"fieldname": "column_break_sync",
+			"fieldtype": "Column Break"
+		},
+		{
+			"depends_on": "eval:doc.auto_create_lead",
+			"description": "Comma-separated list of Survey IDs that should create leads. Leave empty for all surveys.",
+			"fieldname": "lead_survey_ids",
+			"fieldtype": "Small Text",
+			"label": "Lead Survey IDs"
+		},
+		{
+			"fieldname": "section_break_surveys",
+			"fieldtype": "Section Break",
+			"label": "Survey Sync"
+		},
+		{
+			"default": "1",
+			"description": "Sync survey definitions from Formbricks",
+			"fieldname": "sync_surveys",
+			"fieldtype": "Check",
+			"label": "Sync Surveys"
+		},
+		{
+			"fieldname": "column_break_surveys",
+			"fieldtype": "Column Break"
+		},
+		{
+			"default": "60",
+			"description": "Interval in minutes for survey sync",
+			"fieldname": "survey_sync_interval",
+			"fieldtype": "Int",
+			"label": "Survey Sync Interval (minutes)"
+		},
+		{
+			"fieldname": "section_break_status",
+			"fieldtype": "Section Break",
+			"label": "Status"
+		},
+		{
+			"fieldname": "last_sync",
+			"fieldtype": "Datetime",
+			"label": "Last Sync",
+			"read_only": 1
+		},
+		{
+			"fieldname": "column_break_status",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "sync_status",
+			"fieldtype": "Data",
+			"label": "Sync Status",
+			"read_only": 1
+		}
+	],
+	"index_web_pages_for_search": 1,
+	"issingle": 1,
+	"links": [],
+	"modified": "2024-12-20 00:00:00.000000",
+	"modified_by": "Administrator",
+	"module": "formbricks",
+	"name": "Formbricks Settings",
+	"owner": "Administrator",
+	"permissions": [
+		{
+			"create": 1,
+			"delete": 1,
+			"email": 1,
+			"print": 1,
+			"read": 1,
+			"role": "System Manager",
+			"share": 1,
+			"write": 1
+		}
+	],
+	"sort_field": "modified",
+	"sort_order": "DESC",
+	"states": [],
+	"track_changes": 1
+}
