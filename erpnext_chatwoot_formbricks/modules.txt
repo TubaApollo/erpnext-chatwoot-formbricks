@@ -1,3 +1,2 @@
-ERPNext Chatwoot Formbricks
-chatwoot
-formbricks
+Chatwoot
+Formbricks
