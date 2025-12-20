@@ -230,6 +230,11 @@ def _link_to_erpnext_contact(doc, chatwoot_contact_id, contact_data):
 def _parse_timestamp(timestamp):
 	"""Parse timestamp from Chatwoot format.
 
+	Handles various formats:
+	- Unix timestamp (int/float)
+	- ISO format with timezone: 2025-12-20 21:54:59.527000+00:00
+	- Standard datetime string
+
 	Args:
 		timestamp: Timestamp string or Unix timestamp
 	"""
@@ -242,6 +247,19 @@ def _parse_timestamp(timestamp):
 			from datetime import datetime
 			return datetime.fromtimestamp(timestamp)
 		else:
-			return get_datetime(timestamp)
+			timestamp_str = str(timestamp)
+			# Remove timezone info if present (e.g., +00:00, Z)
+			# MariaDB doesn't accept timezone-aware datetime strings
+			if '+' in timestamp_str:
+				timestamp_str = timestamp_str.rsplit('+', 1)[0]
+			elif timestamp_str.endswith('Z'):
+				timestamp_str = timestamp_str[:-1]
+			# Remove microseconds if too precise for the field
+			if '.' in timestamp_str:
+				parts = timestamp_str.split('.')
+				if len(parts[1]) > 6:
+					parts[1] = parts[1][:6]
+				timestamp_str = '.'.join(parts)
+			return get_datetime(timestamp_str)
 	except Exception:
 		return now_datetime()

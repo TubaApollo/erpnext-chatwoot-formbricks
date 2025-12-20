@@ -39,7 +39,7 @@
 			"fieldname": "sender_type",
 			"fieldtype": "Select",
 			"label": "Sender Type",
-			"options": "contact\nagent\nbot",
+			"options": "contact\nagent\nbot\nagent_bot",
 			"read_only": 1
 		},
 		{
