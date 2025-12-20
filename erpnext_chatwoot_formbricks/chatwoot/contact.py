@@ -8,44 +8,62 @@ from erpnext_chatwoot_formbricks.chatwoot.api import ChatwootAPI
 
 
 def create_erpnext_contact(chatwoot_contact):
-	"""Create a Customer or Lead in ERPNext from Chatwoot contact.
+	"""Link Chatwoot contact to existing ERPNext Customer by email.
+
+	Only links if:
+	- Email is provided in Chatwoot contact
+	- A Customer with that email already exists in ERPNext
 
 	Args:
 		chatwoot_contact: Contact data from Chatwoot webhook
+
+	Returns:
+		Customer name if linked, None otherwise
 	"""
 	settings = frappe.get_single("Chatwoot Settings")
 	if not settings.enabled:
 		return None
 
 	contact_id = str(chatwoot_contact.get("id"))
-	name = chatwoot_contact.get("name") or "Unknown"
 	email = chatwoot_contact.get("email")
-	phone = chatwoot_contact.get("phone_number")
 
-	# Check if already exists
-	if _contact_exists(contact_id, email):
+	# Only proceed if email is provided
+	if not email:
 		return None
 
-	if settings.auto_create_lead:
-		return _create_lead(contact_id, name, email, phone, chatwoot_contact)
-	elif settings.auto_create_customer:
-		return _create_customer(contact_id, name, email, phone, chatwoot_contact, settings)
+	# Check if already linked by Chatwoot ID
+	existing_customer = frappe.db.get_value("Customer", {"chatwoot_contact_id": contact_id}, "name")
+	if existing_customer:
+		return existing_customer
 
+	# Find existing Customer by email and link
+	customer = frappe.db.get_value("Customer", {"email_id": email}, "name")
+	if customer:
+		frappe.db.set_value("Customer", customer, "chatwoot_contact_id", contact_id)
+		frappe.db.commit()
+		return customer
+
+	# No matching Customer found - do nothing
 	return None
 
 
 def update_erpnext_contact(chatwoot_contact):
-	"""Update an existing Customer or Lead from Chatwoot contact.
+	"""Update an existing linked Customer from Chatwoot contact.
+
+	Only updates if Customer is already linked via chatwoot_contact_id.
 
 	Args:
 		chatwoot_contact: Contact data from Chatwoot webhook
+
+	Returns:
+		Customer name if updated, None otherwise
 	"""
 	contact_id = str(chatwoot_contact.get("id"))
 	name = chatwoot_contact.get("name")
 	email = chatwoot_contact.get("email")
 	phone = chatwoot_contact.get("phone_number")
 
-	# Find and update Customer
+	# Find and update Customer (only if already linked)
 	customer = frappe.db.get_value("Customer", {"chatwoot_contact_id": contact_id}, "name")
 	if customer:
 		updates = {}
@@ -60,26 +78,14 @@ def update_erpnext_contact(chatwoot_contact):
 			frappe.db.commit()
 		return customer
 
-	# Find and update Lead
-	lead = frappe.db.get_value("Lead", {"chatwoot_contact_id": contact_id}, "name")
-	if lead:
-		updates = {}
-		if name:
-			updates["lead_name"] = name
-		if email:
-			updates["email_id"] = email
-		if phone:
-			updates["mobile_no"] = phone
-		if updates:
-			frappe.db.set_value("Lead", lead, updates)
-			frappe.db.commit()
-		return lead
-
 	return None
 
 
 def sync_contacts_from_chatwoot():
-	"""Sync all contacts from Chatwoot to ERPNext.
+	"""Sync contacts from Chatwoot to ERPNext.
+
+	Only links Chatwoot contacts to existing ERPNext Customers by email.
+	Does not create new Customers.
 
 	This is called by the scheduler.
 	"""
@@ -89,7 +95,7 @@ def sync_contacts_from_chatwoot():
 
 	api = ChatwootAPI(settings)
 	page = 1
-	total_synced = 0
+	total_linked = 0
 
 	while True:
 		try:
@@ -101,9 +107,9 @@ def sync_contacts_from_chatwoot():
 
 			for contact in contacts:
 				try:
-					if not _contact_exists(str(contact.get("id")), contact.get("email")):
-						create_erpnext_contact(contact)
-						total_synced += 1
+					result = create_erpnext_contact(contact)
+					if result:
+						total_linked += 1
 				except Exception as e:
 					frappe.log_error(f"Error syncing contact {contact.get('id')}: {e}")
 
@@ -122,7 +128,7 @@ def sync_contacts_from_chatwoot():
 	frappe.db.set_value("Chatwoot Settings", None, "last_sync", now_datetime())
 	frappe.db.commit()
 
-	return total_synced
+	return total_linked
 
 
 def sync_customer_to_chatwoot(doc, method=None):
@@ -178,97 +184,3 @@ def sync_customer_to_chatwoot(doc, method=None):
 		frappe.log_error(f"Error syncing Customer {doc.name} to Chatwoot: {e}")
 
 
-def _contact_exists(chatwoot_contact_id, email):
-	"""Check if contact already exists in ERPNext.
-
-	Args:
-		chatwoot_contact_id: Chatwoot contact ID
-		email: Contact email
-
-	Returns:
-		True if contact exists, False otherwise
-	"""
-	# Check by Chatwoot ID
-	if frappe.db.exists("Customer", {"chatwoot_contact_id": chatwoot_contact_id}):
-		return True
-	if frappe.db.exists("Lead", {"chatwoot_contact_id": chatwoot_contact_id}):
-		return True
-
-	# Check by email
-	if email:
-		if frappe.db.exists("Customer", {"email_id": email}):
-			return True
-		if frappe.db.exists("Lead", {"email_id": email}):
-			return True
-
-	return False
-
-
-def _create_customer(contact_id, name, email, phone, chatwoot_contact, settings):
-	"""Create a Customer from Chatwoot contact.
-
-	Args:
-		contact_id: Chatwoot contact ID
-		name: Contact name
-		email: Contact email
-		phone: Contact phone
-		chatwoot_contact: Full contact data
-		settings: Chatwoot Settings document
-	"""
-	try:
-		customer = frappe.new_doc("Customer")
-		customer.customer_name = name
-		customer.customer_type = "Individual"
-
-		if settings.customer_group:
-			customer.customer_group = settings.customer_group
-		else:
-			customer.customer_group = frappe.db.get_single_value("Selling Settings", "customer_group") or "All Customer Groups"
-
-		customer.territory = frappe.db.get_single_value("Selling Settings", "territory") or "All Territories"
-
-		if email:
-			customer.email_id = email
-		if phone:
-			customer.mobile_no = phone
-
-		customer.chatwoot_contact_id = contact_id
-		customer.insert(ignore_permissions=True)
-		frappe.db.commit()
-
-		return customer.name
-
-	except Exception as e:
-		frappe.log_error(f"Error creating Customer from Chatwoot contact {contact_id}: {e}")
-		return None
-
-
-def _create_lead(contact_id, name, email, phone, chatwoot_contact):
-	"""Create a Lead from Chatwoot contact.
-
-	Args:
-		contact_id: Chatwoot contact ID
-		name: Contact name
-		email: Contact email
-		phone: Contact phone
-		chatwoot_contact: Full contact data
-	"""
-	try:
-		lead = frappe.new_doc("Lead")
-		lead.lead_name = name
-		lead.source = "Chat"
-
-		if email:
-			lead.email_id = email
-		if phone:
-			lead.mobile_no = phone
-
-		lead.chatwoot_contact_id = contact_id
-		lead.insert(ignore_permissions=True)
-		frappe.db.commit()
-
-		return lead.name
-
-	except Exception as e:
-		frappe.log_error(f"Error creating Lead from Chatwoot contact {contact_id}: {e}")
-		return None

@@ -188,7 +188,11 @@ def cleanup_old_conversations():
 
 
 def _link_to_erpnext_contact(doc, chatwoot_contact_id, contact_data):
-	"""Link conversation to ERPNext Customer or Lead.
+	"""Link conversation to existing ERPNext Customer by email.
+
+	Only links if:
+	- Email is provided in contact_data
+	- A Customer with that email already exists in ERPNext
 
 	Args:
 		doc: Chatwoot Conversation document
@@ -197,7 +201,7 @@ def _link_to_erpnext_contact(doc, chatwoot_contact_id, contact_data):
 	"""
 	chatwoot_contact_id = str(chatwoot_contact_id)
 
-	# Check for existing Customer
+	# Check if already linked by Chatwoot ID
 	customer = frappe.db.get_value(
 		"Customer",
 		{"chatwoot_contact_id": chatwoot_contact_id},
@@ -207,31 +211,20 @@ def _link_to_erpnext_contact(doc, chatwoot_contact_id, contact_data):
 		doc.customer = customer
 		return
 
-	# Check for existing Lead
-	lead = frappe.db.get_value(
-		"Lead",
-		{"chatwoot_contact_id": chatwoot_contact_id},
-		"name"
-	)
-	if lead:
-		doc.lead = lead
+	# Only proceed if email is provided
+	email = contact_data.get("email")
+	if not email:
 		return
 
-	# Try to find by email
-	email = contact_data.get("email")
-	if email:
-		customer = frappe.db.get_value("Customer", {"email_id": email}, "name")
-		if customer:
-			doc.customer = customer
-			# Update the Customer with Chatwoot ID
-			frappe.db.set_value("Customer", customer, "chatwoot_contact_id", chatwoot_contact_id)
-			return
+	# Find existing Customer by email and link
+	customer = frappe.db.get_value("Customer", {"email_id": email}, "name")
+	if customer:
+		doc.customer = customer
+		# Update the Customer with Chatwoot ID for future lookups
+		frappe.db.set_value("Customer", customer, "chatwoot_contact_id", chatwoot_contact_id)
+		return
 
-		lead = frappe.db.get_value("Lead", {"email_id": email}, "name")
-		if lead:
-			doc.lead = lead
-			frappe.db.set_value("Lead", lead, "chatwoot_contact_id", chatwoot_contact_id)
-			return
+	# No matching Customer found - do nothing
 
 
 def _parse_timestamp(timestamp):
