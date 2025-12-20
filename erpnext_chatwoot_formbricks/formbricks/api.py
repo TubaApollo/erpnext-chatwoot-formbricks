@@ -41,6 +41,21 @@ class FormbricksAPI:
 			)
 			response.raise_for_status()
 			return response.json() if response.content else {}
+		except requests.exceptions.HTTPError as e:
+			# Log the actual response body for debugging
+			error_body = ""
+			try:
+				error_body = e.response.text
+			except:
+				pass
+			frappe.log_error(
+				f"Formbricks API request failed: {method} {url}\n"
+				f"Status: {e.response.status_code}\n"
+				f"Request data: {data}\n"
+				f"Response body: {error_body}",
+				"Formbricks API Error"
+			)
+			raise
 		except requests.exceptions.RequestException as e:
 			frappe.log_error(
 				f"Formbricks API request failed: {method} {url} - {str(e)}",
