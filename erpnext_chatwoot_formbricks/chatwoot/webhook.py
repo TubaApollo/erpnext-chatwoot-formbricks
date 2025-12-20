@@ -15,9 +15,17 @@ def handle():
 	This endpoint receives webhook events from Chatwoot and processes them accordingly.
 	"""
 	# Get request data
+	data = None
 	try:
-		data = frappe.request.get_json()
-	except Exception:
+		# Try multiple methods to get JSON data
+		if hasattr(frappe.request, 'get_json'):
+			data = frappe.request.get_json(force=True, silent=True)
+		if not data:
+			raw_data = frappe.request.get_data(as_text=True)
+			if raw_data:
+				data = json.loads(raw_data)
+	except Exception as e:
+		frappe.log_error(f"Failed to parse webhook JSON: {e}", "Chatwoot Webhook JSON Error")
 		frappe.throw(_("Invalid JSON payload"), frappe.InvalidRequestError)
 
 	if not data:
@@ -96,13 +104,19 @@ def _handle_conversation_created(data):
 	"""Handle conversation_created event.
 
 	Creates a new Chatwoot Conversation document in ERPNext.
+	Also creates an Issue if sync_conversations_as_issues is enabled.
 	"""
 	from erpnext_chatwoot_formbricks.chatwoot.conversation import create_or_update_conversation
 
 	conversation = data.get("conversation", {})
 	contact = data.get("sender", {}) or conversation.get("meta", {}).get("sender", {})
 
-	create_or_update_conversation(conversation, contact)
+	conv_doc = create_or_update_conversation(conversation, contact)
+
+	# Create Issue if enabled
+	settings = frappe.get_single("Chatwoot Settings")
+	if settings.sync_conversations_as_issues and conv_doc:
+		_create_issue_from_conversation(conv_doc, conversation, contact, settings)
 
 
 def _handle_conversation_updated(data):
@@ -180,3 +194,66 @@ def _handle_contact_updated(data):
 	contact = data.get("contact", {})
 	if contact:
 		update_erpnext_contact(contact)
+
+
+def _create_issue_from_conversation(conv_doc, conversation_data, contact_data, settings):
+	"""Create an Issue from a Chatwoot conversation.
+
+	Args:
+		conv_doc: Chatwoot Conversation document
+		conversation_data: Raw conversation data from webhook
+		contact_data: Contact data from webhook
+		settings: Chatwoot Settings document
+	"""
+	conversation_id = str(conversation_data.get("id"))
+
+	# Check if Issue already exists for this conversation
+	existing_issue = frappe.db.exists("Issue", {"chatwoot_conversation_id": conversation_id})
+	if existing_issue:
+		return existing_issue
+
+	try:
+		# Build subject from contact info
+		contact_name = contact_data.get("name", "Unknown")
+		contact_email = contact_data.get("email", "")
+		inbox_name = conv_doc.inbox_name or "Chatwoot"
+
+		subject = f"[{inbox_name}] Conversation with {contact_name}"
+		if contact_email:
+			subject += f" ({contact_email})"
+
+		# Create the Issue
+		issue = frappe.new_doc("Issue")
+		issue.subject = subject
+		issue.raised_by = contact_email or ""
+		issue.chatwoot_conversation_id = conversation_id
+
+		# Set Issue Type if configured
+		if settings.issue_type:
+			issue.issue_type = settings.issue_type
+
+		# Link to Customer if available
+		if conv_doc.customer:
+			issue.customer = conv_doc.customer
+
+		# Set description with conversation link
+		chatwoot_url = settings.api_url.rstrip("/")
+		account_id = settings.account_id
+		conv_link = f"{chatwoot_url}/app/accounts/{account_id}/conversations/{conversation_id}"
+
+		issue.description = f"""<p>New conversation from Chatwoot</p>
+<p><strong>Contact:</strong> {contact_name}</p>
+<p><strong>Email:</strong> {contact_email or 'N/A'}</p>
+<p><strong>Inbox:</strong> {inbox_name}</p>
+<p><a href="{conv_link}">View in Chatwoot</a></p>"""
+
+		issue.insert(ignore_permissions=True)
+		frappe.db.commit()
+
+		return issue.name
+
+	except Exception as e:
+		frappe.log_error(
+			f"Error creating Issue from conversation {conversation_id}: {e}",
+			"Chatwoot Issue Creation Error"
+		)
