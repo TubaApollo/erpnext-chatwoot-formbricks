@@ -47,16 +47,10 @@ def send_comment_to_chatwoot(doc, method=None):
 		content = _extract_text_from_html(doc.content)
 
 		if content:
-			# Get the user's full name
-			user_name = frappe.get_value("User", doc.owner, "full_name") or doc.owner
-
-			# Format message with sender info
-			message = f"[{user_name} via ERPNext]\n\n{content}"
-
-			# Send to Chatwoot
+			# Send to Chatwoot (agent name is shown automatically by Chatwoot)
 			api.send_message(
 				conversation_id=issue.chatwoot_conversation_id,
-				content=message,
+				content=content,
 				message_type="outgoing",
 				private=False
 			)
