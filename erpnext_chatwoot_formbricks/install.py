@@ -87,7 +87,7 @@ def setup_custom_fields():
 				fieldname="chatwoot_section",
 				label="Chatwoot Integration",
 				fieldtype="Section Break",
-				insert_after="simultaneous_sessions",
+				insert_after="api_key",
 				collapsible=1,
 			),
 			dict(
@@ -95,7 +95,7 @@ def setup_custom_fields():
 				label="Chatwoot API Token",
 				fieldtype="Password",
 				insert_after="chatwoot_section",
-				description="Personal Chatwoot API token. Messages will appear under your Chatwoot agent name. Leave empty to use global token.",
+				description="Personal Chatwoot API token. Leave empty to use global token.",
 			),
 		],
 	}
