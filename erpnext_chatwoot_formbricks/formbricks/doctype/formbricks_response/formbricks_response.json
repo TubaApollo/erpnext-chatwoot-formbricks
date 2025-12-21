@@ -12,6 +12,8 @@
 		"column_break_1",
 		"customer",
 		"lead",
+		"section_break_formatted",
+		"formatted_data",
 		"section_break_data",
 		"data_json",
 		"section_break_contact",
@@ -68,9 +70,20 @@
 			"options": "Lead"
 		},
 		{
+			"fieldname": "section_break_formatted",
+			"fieldtype": "Section Break",
+			"label": "Survey Answers"
+		},
+		{
+			"fieldname": "formatted_data",
+			"fieldtype": "HTML",
+			"label": "Formatted Response"
+		},
+		{
+			"collapsible": 1,
 			"fieldname": "section_break_data",
 			"fieldtype": "Section Break",
-			"label": "Response Data"
+			"label": "Raw Data (JSON)"
 		},
 		{
 			"fieldname": "data_json",
@@ -126,16 +139,7 @@
 		}
 	],
 	"index_web_pages_for_search": 1,
-	"links": [
-		{
-			"link_doctype": "Customer",
-			"link_fieldname": "customer"
-		},
-		{
-			"link_doctype": "Lead",
-			"link_fieldname": "lead"
-		}
-	],
+	"links": [],
 	"modified": "2024-12-20 00:00:00.000000",
 	"modified_by": "Administrator",
 	"module": "formbricks",
