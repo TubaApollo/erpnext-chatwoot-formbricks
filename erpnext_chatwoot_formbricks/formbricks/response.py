@@ -175,34 +175,16 @@ def _link_to_erpnext_contact(doc):
 	if not email:
 		return
 
-	# Check for existing Customer via Contact doctype
-	# In ERPNext, Customer emails are stored in linked Contact records
-	contact = frappe.db.get_value(
-		"Contact Email",
-		{"email_id": email, "parenttype": "Contact"},
-		"parent"
-	)
-	if contact:
-		# Get the linked Customer from Contact
-		customer = frappe.db.get_value(
-			"Dynamic Link",
-			{"parent": contact, "link_doctype": "Customer"},
-			"link_name"
-		)
-		if customer:
-			doc.customer = customer
-			return
+	# Find existing Customer or Lead by email using common function
+	from erpnext_chatwoot_formbricks.common.contact_sync import find_erpnext_contact_by_email
+	doctype, name = find_erpnext_contact_by_email(email)
 
-	# Also check Customer.email_id field directly (some setups use this)
-	customer = frappe.db.get_value("Customer", {"email_id": email}, "name")
-	if customer:
-		doc.customer = customer
+	if doctype == "Customer" and name:
+		doc.customer = name
 		return
 
-	# Check for existing Lead
-	lead = frappe.db.get_value("Lead", {"email_id": email}, "name")
-	if lead:
-		doc.lead = lead
+	if doctype == "Lead" and name:
+		doc.lead = name
 		return
 
 

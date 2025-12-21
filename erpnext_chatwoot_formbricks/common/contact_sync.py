@@ -74,6 +74,11 @@ def sync_lead_to_chatwoot(doc, method=None):
 def find_erpnext_contact_by_email(email):
 	"""Find an ERPNext Customer or Lead by email.
 
+	Searches in multiple places:
+	1. Customer.email_id field
+	2. Contact doctype (linked to Customer via Dynamic Link)
+	3. Lead.email_id field
+
 	Args:
 		email: Email address to search for
 
@@ -83,10 +88,26 @@ def find_erpnext_contact_by_email(email):
 	if not email:
 		return None, None
 
-	# Check Customer first
+	# Check Customer.email_id field directly
 	customer = frappe.db.get_value("Customer", {"email_id": email}, "name")
 	if customer:
 		return "Customer", customer
+
+	# Check via Contact doctype (ERPNext stores Customer emails in linked Contacts)
+	contact = frappe.db.get_value(
+		"Contact Email",
+		{"email_id": email, "parenttype": "Contact"},
+		"parent"
+	)
+	if contact:
+		# Get the linked Customer from Contact via Dynamic Link
+		customer = frappe.db.get_value(
+			"Dynamic Link",
+			{"parent": contact, "link_doctype": "Customer"},
+			"link_name"
+		)
+		if customer:
+			return "Customer", customer
 
 	# Then check Lead
 	lead = frappe.db.get_value("Lead", {"email_id": email}, "name")

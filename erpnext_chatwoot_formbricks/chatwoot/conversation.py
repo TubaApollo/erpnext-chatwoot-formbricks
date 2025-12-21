@@ -216,12 +216,14 @@ def _link_to_erpnext_contact(doc, chatwoot_contact_id, contact_data):
 	if not email:
 		return
 
-	# Find existing Customer by email and link
-	customer = frappe.db.get_value("Customer", {"email_id": email}, "name")
-	if customer:
-		doc.customer = customer
+	# Find existing Customer by email using common function
+	from erpnext_chatwoot_formbricks.common.contact_sync import find_erpnext_contact_by_email
+	doctype, name = find_erpnext_contact_by_email(email)
+
+	if doctype == "Customer" and name:
+		doc.customer = name
 		# Update the Customer with Chatwoot ID for future lookups
-		frappe.db.set_value("Customer", customer, "chatwoot_contact_id", chatwoot_contact_id)
+		frappe.db.set_value("Customer", name, "chatwoot_contact_id", chatwoot_contact_id)
 		return
 
 	# No matching Customer found - do nothing
