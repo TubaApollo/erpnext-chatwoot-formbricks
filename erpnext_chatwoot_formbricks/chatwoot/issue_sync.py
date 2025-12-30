@@ -62,6 +62,12 @@ def send_comment_to_chatwoot(doc, method=None):
 				private=False
 			)
 
+			# Set conversation status to "open" when agent replies from ERPNext
+			api.update_conversation_status(
+				conversation_id=issue.chatwoot_conversation_id,
+				status="open"
+			)
+
 	except Exception as e:
 		frappe.log_error(
 			f"Error sending Issue comment to Chatwoot: {e}",
