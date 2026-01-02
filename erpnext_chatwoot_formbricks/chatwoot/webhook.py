@@ -189,10 +189,17 @@ def _handle_contact_created(data):
 	"""Handle contact_created event.
 
 	Creates a new Customer or Lead in ERPNext based on settings.
+	Note: For contact_created events, Chatwoot may send the contact data
+	directly at the root level or inside a "contact" key.
 	"""
 	from erpnext_chatwoot_formbricks.chatwoot.contact import create_erpnext_contact
 
-	contact = data.get("contact", {})
+	# Check for "contact" key first (for backward compatibility), then use root data
+	contact = data.get("contact")
+	if not contact and data.get("id"):
+		# Contact data is at root level
+		contact = data
+
 	if contact:
 		create_erpnext_contact(contact)
 
@@ -201,10 +208,18 @@ def _handle_contact_updated(data):
 	"""Handle contact_updated event.
 
 	Updates the corresponding Customer or Lead in ERPNext.
+	Note: For contact_updated events, Chatwoot sends the contact data
+	directly at the root level, not inside a "contact" key.
 	"""
 	from erpnext_chatwoot_formbricks.chatwoot.contact import update_erpnext_contact
 
-	contact = data.get("contact", {})
+	# For contact_updated events, the contact data is at the root level
+	# Check for "contact" key first (for backward compatibility), then use root data
+	contact = data.get("contact")
+	if not contact and data.get("id"):
+		# Contact data is at root level
+		contact = data
+
 	if contact:
 		update_erpnext_contact(contact)
 
